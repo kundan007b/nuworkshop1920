@@ -1,0 +1,182 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /workshop/registrations:
+    post:
+      operationId: createRegistration
+      summary: Save a workshop registration request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationInput"
+      responses:
+        "201":
+          description: Registration request saved, not a confirmed seat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationReceipt"
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Registration temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /workshop/registrations/{token}:
+    get:
+      operationId: getRegistration
+      summary: Retrieve a receipt using its private unguessable token
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Registration receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationReceipt"
+        "404":
+          description: Receipt not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    RegistrationInput:
+      type: object
+      required: [fullName, email, category, affiliation, submitAbstract, accommodation, consent]
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        category:
+          type: string
+          enum: [internal_student, internal_faculty, external_student, external_faculty]
+        affiliation:
+          type: string
+          minLength: 2
+          maxLength: 200
+        submitAbstract:
+          type: boolean
+        presentationTitle:
+          type: string
+          maxLength: 200
+        abstract:
+          type: string
+          maxLength: 15000
+        format:
+          type: string
+          enum: [oral, poster]
+        accommodation:
+          type: boolean
+        dietaryRestrictions:
+          type: string
+          maxLength: 300
+        consent:
+          type: boolean
+          enum: [true]
+    RegistrationReceipt:
+      type: object
+      required: [reference, token, fullName, email, category, affiliation, submitAbstract, accommodation, createdAt, status, emailStatus]
+      properties:
+        reference:
+          type: string
+        token:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        category:
+          type: string
+        affiliation:
+          type: string
+        submitAbstract:
+          type: boolean
+        accommodation:
+          type: boolean
+        presentationTitle:
+          type: string
+        format:
+          type: string
+        createdAt:
+          type: string
+        status:
+          type: string
+          enum: [request_received]
+        emailStatus:
+          type: string
+          enum: [not_sent]
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+

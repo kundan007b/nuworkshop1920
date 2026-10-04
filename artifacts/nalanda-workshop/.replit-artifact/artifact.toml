@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Nalanda Workshop 2026"
+description = "Nalanda University workshop on Logic, Computation, AI and Quantum Information Technologies, with a mobile-friendly programme and registration request flow."
+version = "1.0.0"
+id = "artifacts/nalanda-workshop"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24695
+
+[services.development]
+run = "pnpm --filter @workspace/nalanda-workshop run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nalanda-workshop", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/nalanda-workshop/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24695"
+BASE_PATH = "/"
